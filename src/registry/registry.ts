@@ -13,20 +13,19 @@ export type GetNodeRegistryBody = {
   nodes: Node[];
 };
 
-// In-memory storage for registered nodes
-let nodesRegistry: Node[] = [];
-
 export async function launchRegistry() {
   const _registry = express();
   _registry.use(express.json());
   _registry.use(bodyParser.json());
 
-  // Vérification du statut du registre
-  _registry.get("/status", (req: Request, res: Response) => {
+  // /status
+  _registry.get("/status", (req, res) => {
     res.send("live");
   });
 
-  // Enregistrement des nœuds
+  let nodes: Node[] = [];
+
+  // POST /registerNode
   _registry.post("/registerNode", (req: Request, res: Response) => {
     const { nodeId, pubKey } = req.body as RegisterNodeBody;
 
@@ -34,23 +33,18 @@ export async function launchRegistry() {
       return res.status(400).json({ error: "Invalid node registration" });
     }
 
-    if (nodesRegistry.some(node => node.nodeId === nodeId)) {
-      return res.status(400).json({ error: "Node already registered" });
-    }
-
-    nodesRegistry.push({ nodeId, pubKey });
-    console.log(`Node ${nodeId} registered with public key: ${pubKey.substring(0, 10)}...`);
-
-    return res.status(201).json({ message: "Node registered successfully" });
+    // Store the node in memory
+    nodes.push({ nodeId, pubKey });
+    return res.json({ message: "Node registered successfully" });
   });
 
-  // Récupération de la liste des nœuds enregistrés
+  // GET /getNodeRegistry
   _registry.get("/getNodeRegistry", (_, res: Response) => {
-    res.json({ nodes: nodesRegistry });
+    res.json({ nodes });
   });
 
   const server = _registry.listen(REGISTRY_PORT, () => {
-    console.log(`Registry is listening on port ${REGISTRY_PORT}`);
+    console.log(`registry is listening on port ${REGISTRY_PORT}`);
   });
 
   return server;

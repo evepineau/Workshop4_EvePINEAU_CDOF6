@@ -24,8 +24,11 @@ type GenerateRsaKeyPair = {
   publicKey: webcrypto.CryptoKey;
   privateKey: webcrypto.CryptoKey;
 };
-export async function generateRsaKeyPair(): Promise<{ publicKey: webcrypto.CryptoKey; privateKey: webcrypto.CryptoKey }> {
-  return await webcrypto.subtle.generateKey(
+export async function generateRsaKeyPair(): Promise<GenerateRsaKeyPair> {
+  // TODO implement this function using the crypto package to generate a public and private RSA key pair.
+  //      the public key should be used for encryption and the private key for decryption. Make sure the
+  //      keys are extractable.
+  const keyPair = await webcrypto.subtle.generateKey(
     {
       name: "RSA-OAEP",
       modulusLength: 2048,
@@ -35,6 +38,8 @@ export async function generateRsaKeyPair(): Promise<{ publicKey: webcrypto.Crypt
     true,
     ["encrypt", "decrypt"]
   );
+
+  return { publicKey: keyPair.publicKey, privateKey: keyPair.privateKey };
 }
 
 // Export a crypto public key to a base64 string format
