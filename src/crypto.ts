@@ -148,3 +148,8 @@ export async function symDecrypt(
 
   return "";
 }
+
+export async function decryptMessage(encryptedMessage: string, privateKey: string): Promise<string> {
+  const cryptoKey = await importPrvKey(privateKey);
+  return rsaDecrypt(encryptedMessage, cryptoKey);
+}
