@@ -19,6 +19,16 @@ export async function user(userId: number) {
     return res.send("live");
   });
 
+  _user.post("/receiveMessage", (req, res) => {
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "Missing message" });
+    }
+  
+    lastReceivedMessage = message; // Store the received message
+    return res.json({ message: "Message received successfully" });
+  });  
+
   _user.get("/getLastReceivedMessage", (req, res) => {
     return res.json({ result: lastReceivedMessage });
   });

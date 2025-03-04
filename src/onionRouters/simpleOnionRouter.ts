@@ -27,6 +27,24 @@ export async function simpleOnionRouter(nodeId: number) {
     body: JSON.stringify({ nodeId, pubKey: publicKey }),
   });
 
+  onionRouter.post("/receiveMessage", async (req, res) => {
+    const { encryptedMessage, nextNodePort } = req.body;
+    if (!encryptedMessage || !nextNodePort) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+  
+    lastReceivedEncryptedMessage = encryptedMessage;
+    lastMessageDestination = nextNodePort;
+  
+    await fetch(`http://localhost:${nextNodePort}/receiveMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: encryptedMessage }),
+    });
+  
+    return res.json({ message: "Message forwarded" });
+  });  
+
   onionRouter.get("/status", (req, res) => {
     return res.send("live");
   });
