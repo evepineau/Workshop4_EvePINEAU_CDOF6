@@ -63,11 +63,15 @@ export async function simpleOnionRouter(nodeId: number) {
     return res.send("live");
   });
 
-  // Retourner la clé privée (uniquement pour les tests)
   onionRouter.get("/getPrivateKey", async (req, res) => {
-    const privateKeyBase64 = await exportPrvKey(privateKey);
-    return res.json({ result: privateKeyBase64 });
-  });
+    try {
+      const privateKeyBase64 = await exportPrvKey(privateKey);
+      return res.json({ result: privateKeyBase64 });
+    } catch (error) {
+      console.error("Failed to export private key:", error);
+      return res.status(500).json({ error: "Failed to export private key" });
+    }
+  });  
 
   onionRouter.get("/getLastReceivedEncryptedMessage", (req, res) => {
     return res.json({ result: lastReceivedEncryptedMessage });

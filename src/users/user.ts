@@ -34,15 +34,15 @@ export async function user(userId: number) {
   // Route pour recevoir un message
   _user.post("/message", (req, res) => {
     const { message } = req.body;
-
+  
     if (!message) {
       return res.status(400).json({ error: "Message is missing" });
     }
-
-    lastReceivedMessage = message; // Stocke le message reçu
-
-    return res.json({ message: "Message received successfully" });
+  
+    lastReceivedMessage = message;
+    return res.send("success");
   });
+  
 
   const server = _user.listen(BASE_USER_PORT + userId, () => {
     console.log(`User ${userId} is listening on port ${BASE_USER_PORT + userId}`);
