@@ -25,16 +25,20 @@ export async function simpleOnionRouter(nodeId: number) {
   });
 
   onionRouter.post("/receiveMessage", async (req, res) => {
-    const { encryptedMessage, nextNodePort, privateKey } = req.body;
-    if (!encryptedMessage || !nextNodePort || !privateKey) {
-      return res.status(400).json({ error: "Missing required fields" });
+    try {
+      const { encryptedMessage, nextNodePort, privateKey } = req.body;
+      if (!encryptedMessage || !nextNodePort || !privateKey) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      lastReceivedEncryptedMessage = encryptedMessage;
+      lastReceivedDecryptedMessage = await decryptMessage(encryptedMessage, privateKey);
+      lastMessageDestination = nextNodePort;
+
+      return res.json({ message: "Message received and decrypted", decrypted: lastReceivedDecryptedMessage });
+    } catch (error) {
+      return res.status(500).json({ error: "An error occurred during decryption" });
     }
-
-    lastReceivedEncryptedMessage = encryptedMessage;
-    lastReceivedDecryptedMessage = await decryptMessage(encryptedMessage, privateKey);
-    lastMessageDestination = nextNodePort;
-
-    res.json({ message: "Message received and decrypted", decrypted: lastReceivedDecryptedMessage });
   });
 
   const server = onionRouter.listen(BASE_ONION_ROUTER_PORT + nodeId, () => {
