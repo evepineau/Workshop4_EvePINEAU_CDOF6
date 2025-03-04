@@ -1,6 +1,6 @@
 import bodyParser from "body-parser";
 import express from "express";
-import { BASE_USER_PORT } from "../config";
+import { BASE_USER_PORT, REGISTRY_PORT } from "../config";
 
 export type SendMessageBody = {
   message: string;
@@ -27,24 +27,10 @@ export async function user(userId: number) {
     return res.json({ result: lastSentMessage });
   });
 
-  _user.post("/sendMessage", (req, res) => {
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Missing message" });
-    }
-
-    lastSentMessage = message;
-    return res.json({ message: "Message sent successfully" });
-  });
-
-  _user.post("/receiveMessage", (req, res) => {
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Missing message" });
-    }
-
-    lastReceivedMessage = message;
-    return res.json({ message: "Message received successfully" });
+  _user.get("/getNodeRegistry", async (req, res) => {
+    const response = await fetch(`http://localhost:${REGISTRY_PORT}/getNodeRegistry`);
+    const data = await response.json();
+    return res.json(data);
   });
 
   const server = _user.listen(BASE_USER_PORT + userId, () => {

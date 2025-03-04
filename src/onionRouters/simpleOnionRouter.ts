@@ -1,7 +1,7 @@
 import bodyParser from "body-parser";
 import express from "express";
-import { BASE_ONION_ROUTER_PORT } from "../config";
-import { decryptMessage } from "../crypto";
+import { BASE_ONION_ROUTER_PORT, REGISTRY_PORT } from "../config";
+import { generateRsaKeyPair } from "../crypto";
 
 export async function simpleOnionRouter(nodeId: number) {
   const onionRouter = express();
@@ -11,34 +11,39 @@ export async function simpleOnionRouter(nodeId: number) {
   let lastReceivedEncryptedMessage: string | null = null;
   let lastReceivedDecryptedMessage: string | null = null;
   let lastMessageDestination: number | null = null;
+  let privateKey: string;
+  let publicKey: string;
+
+  // Générer les clés RSA
+  const keyPair = await generateRsaKeyPair();
+  privateKey = keyPair.privateKey;
+  publicKey = keyPair.publicKey;
+
+  // Enregistrer le nœud auprès du registre
+  await fetch(`http://localhost:${REGISTRY_PORT}/registerNode`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nodeId, pubKey: publicKey }),
+  });
+
+  onionRouter.get("/status", (req, res) => {
+    return res.send("live");
+  });
+
+  onionRouter.get("/getPrivateKey", (req, res) => {
+    return res.json({ result: privateKey });
+  });
 
   onionRouter.get("/getLastReceivedEncryptedMessage", (req, res) => {
-    res.json({ result: lastReceivedEncryptedMessage });
+    return res.json({ result: lastReceivedEncryptedMessage });
   });
 
   onionRouter.get("/getLastReceivedDecryptedMessage", (req, res) => {
-    res.json({ result: lastReceivedDecryptedMessage });
+    return res.json({ result: lastReceivedDecryptedMessage });
   });
 
   onionRouter.get("/getLastMessageDestination", (req, res) => {
-    res.json({ result: lastMessageDestination });
-  });
-
-  onionRouter.post("/receiveMessage", async (req, res) => {
-    try {
-      const { encryptedMessage, nextNodePort, privateKey } = req.body;
-      if (!encryptedMessage || !nextNodePort || !privateKey) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      lastReceivedEncryptedMessage = encryptedMessage;
-      lastReceivedDecryptedMessage = await decryptMessage(encryptedMessage, privateKey);
-      lastMessageDestination = nextNodePort;
-
-      return res.json({ message: "Message received and decrypted", decrypted: lastReceivedDecryptedMessage });
-    } catch (error) {
-      return res.status(500).json({ error: "An error occurred during decryption" });
-    }
+    return res.json({ result: lastMessageDestination });
   });
 
   const server = onionRouter.listen(BASE_ONION_ROUTER_PORT + nodeId, () => {
