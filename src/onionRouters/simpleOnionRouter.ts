@@ -2,6 +2,7 @@ import bodyParser from "body-parser";
 import express from "express";
 import { BASE_ONION_ROUTER_PORT, REGISTRY_PORT } from "../config";
 import { generateRsaKeyPair } from "../crypto";
+import { webcrypto } from "crypto";
 
 export async function simpleOnionRouter(nodeId: number) {
   const onionRouter = express();
@@ -11,8 +12,8 @@ export async function simpleOnionRouter(nodeId: number) {
   let lastReceivedEncryptedMessage: string | null = null;
   let lastReceivedDecryptedMessage: string | null = null;
   let lastMessageDestination: number | null = null;
-  let privateKey: string;
-  let publicKey: string;
+  let privateKey: webcrypto.CryptoKey;
+  let publicKey: webcrypto.CryptoKey;
 
   // Générer les clés RSA
   const keyPair = await generateRsaKeyPair();
